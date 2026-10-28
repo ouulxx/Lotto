@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101715">
+  <title>로또 번호 추첨 | Lotto Lab</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #0b0b0b;
+      --surface: #141414;
+      --surface-raised: #222222;
+      --line: #303030;
+      --text: #f5f5f5;
+      --muted: #a5a5a5;
+      --accent: #f4f4f4;
+      --accent-ink: #111111;
+      --soft: #d7d7d7;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 50% -20%, rgba(255, 255, 255, .075), transparent 48%),
+        var(--bg);
+      color: var(--text);
+      font-family: Inter, Pretendard, "Apple SD Gothic Neo", "Noto Sans KR", system-ui, sans-serif;
+    }
+
+    button, select { font: inherit; }
+
+    .page {
+      width: min(100% - 40px, 820px);
+      margin: 0 auto;
+      padding: 28px 0 44px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 56px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+      font-weight: 650;
+      letter-spacing: -.02em;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 40px;
+      height: 40px;
+      place-items: center;
+      border-radius: 13px;
+      background: var(--accent);
+      color: var(--accent-ink);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: -.06em;
+    }
+
+    .brand-name { font-size: 15px; }
+    .brand-sub { color: var(--muted); font-size: 12px; margin-top: 2px; font-weight: 450; }
+
+    .draw-badge {
+      padding: 8px 11px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: #d0d0d0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .12em;
+    }
+
+    .intro { margin-bottom: 27px; }
+
+    .eyebrow {
+      margin: 0 0 12px;
+      color: var(--soft);
+      font-size: 12px;
+      font-weight: 650;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 650px;
+      margin: 0;
+      font-size: clamp(34px, 7vw, 54px);
+      line-height: 1.12;
+      letter-spacing: -.055em;
+      font-weight: 650;
+    }
+
+    .intro-copy {
+      max-width: 560px;
+      margin: 16px 0 0;
+      color: var(--muted);
+      font-size: 15px;
+      line-height: 1.75;
+    }
+
+    .draw-panel {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      background: linear-gradient(145deg, #181818, #121212);
+      box-shadow: 0 24px 70px rgba(0, 0, 0, .28);
+    }
+
+    .control-row {
+      display: flex;
+      align-items: end;
+      gap: 12px;
+      padding: 22px;
+    }
+
+    .count-control { flex: 1; min-width: 0; }
+
+    label {
+      display: block;
+      margin: 0 0 8px;
+      color: #c8c8c8;
+      font-size: 12px;
+      font-weight: 550;
+    }
+
+    select {
+      width: 100%;
+      min-height: 48px;
+      padding: 0 14px;
+      color: var(--text);
+      background: #101010;
+      border: 1px solid #3a3a3a;
+      border-radius: 12px;
+      outline-color: var(--accent);
+    }
+
+    .draw-button, .copy-button {
+      min-height: 48px;
+      border: 0;
+      border-radius: 12px;
+      padding: 0 19px;
+      font-weight: 650;
+      cursor: pointer;
+      transition: transform .16s ease, background .16s ease;
+    }
+
+    .draw-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      color: var(--accent-ink);
+      background: var(--accent);
+      white-space: nowrap;
+    }
+
+    .draw-button:hover { background: #ffffff; transform: translateY(-1px); }
+    .draw-button:active, .copy-button:active { transform: translateY(1px); }
+    .draw-button:focus-visible, .copy-button:focus-visible, select:focus-visible {
+      outline: 3px solid rgba(255, 255, 255, .55);
+      outline-offset: 3px;
+    }
+
+    .button-icon { font-size: 18px; line-height: 1; }
+
+    .results-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 22px 14px;
+      border-top: 1px solid var(--line);
+    }
+
+    .results-title { margin: 0; font-size: 14px; font-weight: 620; }
+    .draw-time { color: var(--muted); font-size: 12px; }
+
+    .result-list {
+      display: grid;
+      gap: 0;
+      padding: 0 22px 8px;
+    }
+
+    .game-row {
+      display: grid;
+      grid-template-columns: 70px minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 14px;
+      min-height: 83px;
+      border-top: 1px solid rgba(255, 255, 255, .1);
+      animation: appear .32s both;
+      animation-delay: calc(var(--row-index, 0) * 45ms);
+    }
+
+    .game-label {
+      color: #a0a0a0;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: .08em;
+    }
+
+    .balls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: clamp(5px, 1.4vw, 10px);
+    }
+
+    .ball {
+      display: grid;
+      width: clamp(34px, 5.5vw, 42px);
+      aspect-ratio: 1;
+      place-items: center;
+      border-radius: 50%;
+      color: #111111;
+      font-size: 13px;
+      font-weight: 750;
+      box-shadow: inset 0 -3px 0 rgba(0, 0, 0, .13), 0 2px 5px rgba(0, 0, 0, .22);
+      animation: pop .34s both;
+      animation-delay: calc(var(--ball-index, 0) * 38ms + var(--row-index, 0) * 45ms);
+    }
+
+    .ball-1 { background: #f4f4f4; }
+    .ball-2 { background: #dedede; }
+    .ball-3 { background: #c7c7c7; }
+    .ball-4 { background: #a9a9a9; }
+    .ball-5 { background: #eeeeee; }
+
+    .bonus {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      color: #c4c4c4;
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .bonus .ball {
+      width: 34px;
+      font-size: 11px;
+    }
+
+    .plus {
+      color: #858585;
+      font-size: 15px;
+      font-weight: 400;
+    }
+
+    .panel-bottom {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 15px;
+      padding: 17px 22px 20px;
+      border-top: 1px solid var(--line);
+    }
+
+    .note {
+      margin: 0;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.6;
+    }
+
+    .copy-button {
+      min-height: 38px;
+      padding: 0 13px;
+      color: #e2e2e2;
+      background: var(--surface-raised);
+      border: 1px solid #3a3a3a;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .copy-button:hover { background: #2d2d2d; }
+
+    .footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 18px 2px 0;
+      color: #898989;
+      font-size: 11px;
+    }
+
+    .footer-mark { color: #eeeeee; }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @keyframes pop {
+      from { opacity: 0; transform: scale(.72); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    @keyframes appear {
+      from { opacity: 0; transform: translateY(5px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 560px) {
+      .page { width: min(100% - 28px, 820px); padding-top: 20px; }
+      .topbar { margin-bottom: 40px; }
+      .intro-copy { font-size: 14px; }
+      .control-row { padding: 16px; }
+      .results-head { padding: 16px 16px 12px; }
+      .result-list { padding: 0 16px 6px; }
+      .game-row { grid-template-columns: 46px minmax(0, 1fr); gap: 8px; padding: 12px 0; }
+      .game-label { font-size: 10px; }
+      .balls { grid-column: 2; grid-row: 1; }
+      .bonus { grid-column: 2; margin-top: 2px; }
+      .bonus .ball { width: 30px; }
+      .panel-bottom { align-items: flex-start; padding: 14px 16px 17px; }
+      .note { max-width: 230px; }
+    }
+
+    @media (max-width: 380px) {
+      .draw-button { padding: 0 13px; }
+      .draw-button .button-label { font-size: 13px; }
+      .game-row { grid-template-columns: 40px minmax(0, 1fr); }
+      .balls { gap: 5px; }
+      .ball { width: 32px; font-size: 12px; }
+      .bonus { font-size: 10px; }
+      .panel-bottom { gap: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+        transition-duration: .01ms !important;
+      }
+    }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header class="topbar">
+      <div class="brand" aria-label="Lotto Lab 로또 번호 생성기">
+        <div class="brand-mark" aria-hidden="true">6/45</div>
+        <div>
+          <div class="brand-name">Lotto Lab</div>
+          <div class="brand-sub">로또 번호 생성기</div>
+        </div>
+      </div>
+      <div class="draw-badge">RANDOM DRAW</div>
+    </header>
+
+    <main>
+      <section class="intro" aria-labelledby="page-title">
+        <p class="eyebrow">A little luck, by chance</p>
+        <h1 id="page-title">오늘의 번호를<br>가볍게 뽑아보세요.</h1>
+        <p class="intro-copy">1부터 45까지, 겹치지 않는 번호 6개와 보너스 번호를 무작위로 추첨해요.</p>
+      </section>
+
+      <section class="draw-panel" aria-label="로또 번호 추첨">
+        <div class="control-row">
+          <div class="count-control">
+            <label for="game-count">추첨할 게임 수</label>
+            <select id="game-count" name="game-count">
+              <option value="1">1 게임</option>
+              <option value="2">2 게임</option>
+              <option value="3" selected>3 게임</option>
+              <option value="5">5 게임</option>
+              <option value="10">10 게임</option>
+            </select>
+          </div>
+          <button class="draw-button" id="draw-button" type="button">
+            <span class="button-icon" aria-hidden="true">↻</span>
+            <span class="button-label">다시 추첨</span>
+          </button>
+        </div>
+
+        <div class="results-head">
+          <h2 class="results-title">추첨 결과</h2>
+          <span class="draw-time" id="draw-time"></span>
+        </div>
+
+        <div class="result-list" id="result-list" aria-live="polite" aria-label="추첨된 번호"></div>
+
+        <div class="panel-bottom">
+          <p class="note">각 게임은 독립적으로 추첨돼요.<br>재미를 위한 무작위 번호이며 당첨을 예측하지 않아요.</p>
+          <button class="copy-button" id="copy-button" type="button">번호 복사</button>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>LOTTO 6/45 · 1–45</span>
+      <span><span class="footer-mark">●</span> 본 번호 6개 + 보너스 1개</span>
+    </footer>
+    <div class="sr-only" id="status" role="status" aria-live="polite"></div>
+  </div>
+
+  <script>
+    const countSelect = document.getElementById("game-count");
+    const drawButton = document.getElementById("draw-button");
+    const resultList = document.getElementById("result-list");
+    const drawTime = document.getElementById("draw-time");
+    const copyButton = document.getElementById("copy-button");
+    const status = document.getElementById("status");
+
+    function getBallColor(number) {
+      if (number <= 10) return "ball-1";
+      if (number <= 20) return "ball-2";
+      if (number <= 30) return "ball-3";
+      if (number <= 40) return "ball-4";
+      return "ball-5";
+    }
+
+    function drawOneGame() {
+      const pool = Array.from({ length: 45 }, function (_, index) {
+        return index + 1;
+      });
+
+      for (let index = pool.length - 1; index > 0; index -= 1) {
+        const swapIndex = Math.floor(Math.random() * (index + 1));
+        const temporary = pool[index];
+        pool[index] = pool[swapIndex];
+        pool[swapIndex] = temporary;
+      }
+
+      return {
+        main: pool.slice(0, 6).sort(function (a, b) { return a - b; }),
+        bonus: pool[6]
+      };
+    }
+
+    function formatNumber(number) {
+      return String(number).padStart(2, "0");
+    }
+
+    function renderGame(game, gameIndex) {
+      const balls = game.main.map(function (number, ballIndex) {
+        return '<span class="ball ' + getBallColor(number) +
+          '" style="--ball-index:' + ballIndex +
+          '" aria-label="' + number + '">' + formatNumber(number) + '</span>';
+      }).join("");
+
+      const bonus = '<div class="bonus"><span class="plus" aria-hidden="true">+</span>' +
+        '<span>보너스</span><span class="ball ' + getBallColor(game.bonus) +
+        '" aria-label="보너스 ' + game.bonus + '">' + formatNumber(game.bonus) + '</span></div>';
+
+      return '<article class="game-row" style="--row-index:' + gameIndex + '">' +
+        '<div class="game-label">GAME ' + String(gameIndex + 1).padStart(2, "0") + '</div>' +
+        '<div class="balls" aria-label="본 번호">' + balls + '</div>' +
+        bonus +
+        '</article>';
+    }
+
+    function drawGames() {
+      const gameCount = Number(countSelect.value);
+      const games = [];
+
+      for (let index = 0; index < gameCount; index += 1) {
+        games.push(drawOneGame());
+      }
+
+      resultList.innerHTML = games.map(renderGame).join("");
+      drawTime.textContent = new Intl.DateTimeFormat("ko-KR", {
+        hour: "2-digit",
+        minute: "2-digit"
+      }).format(new Date()) + " 생성";
+
+      status.textContent = gameCount + "게임의 로또 번호를 추첨했어요.";
+    }
+
+    function getCopyText() {
+      const rows = resultList.querySelectorAll(".game-row");
+
+      return Array.from(rows).map(function (row) {
+        const mainNumbers = Array.from(row.querySelectorAll(".balls .ball"))
+          .map(function (ball) { return ball.textContent; })
+          .join(", ");
+        const bonusNumber = row.querySelector(".bonus .ball").textContent;
+        const gameName = row.querySelector(".game-label").textContent;
+
+        return gameName + ": " + mainNumbers + " + 보너스 " + bonusNumber;
+      }).join("\n");
+    }
+
+    async function copyResults() {
+      const text = getCopyText();
+
+      try {
+        await navigator.clipboard.writeText(text);
+        copyButton.textContent = "복사했어요";
+        status.textContent = "추첨 결과를 복사했어요.";
+      } catch (error) {
+        const temporaryInput = document.createElement("textarea");
+        temporaryInput.value = text;
+        temporaryInput.setAttribute("readonly", "");
+        temporaryInput.style.position = "absolute";
+        temporaryInput.style.left = "-9999px";
+        document.body.appendChild(temporaryInput);
+        temporaryInput.select();
+        document.execCommand("copy");
+        temporaryInput.remove();
+        copyButton.textContent = "복사했어요";
+        status.textContent = "추첨 결과를 복사했어요.";
+      }
+
+      window.setTimeout(function () {
+        copyButton.textContent = "번호 복사";
+      }, 1500);
+    }
+
+    drawButton.addEventListener("click", drawGames);
+    copyButton.addEventListener("click", copyResults);
+    drawGames();
+  </script>
+</body>
+</html>
+
